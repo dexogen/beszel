@@ -54,15 +54,15 @@ func (a *Agent) newSensorConfigWithEnv(primarySensor, sysSensors, sensorsEnvVal 
 		sensorsEnvVal = sensorsEnvVal[1:]
 	}
 
-	for sensor := range strings.SplitSeq(sensorsEnvVal, ",") {
-		sensor = strings.TrimSpace(sensor)
-		if sensor != "" {
-			config.sensors[sensor] = struct{}{}
-			if strings.Contains(sensor, "*") {
-				config.hasWildcards = true
-			}
-		}
-	}
+        for _, sensor := range strings.Split(sensorsEnvVal, ",") {
+                sensor = strings.TrimSpace(sensor)
+                if sensor != "" {
+                        config.sensors[sensor] = struct{}{}
+                        if strings.Contains(sensor, "*") {
+                                config.hasWildcards = true
+                        }
+                }
+        }
 
 	return config
 }
