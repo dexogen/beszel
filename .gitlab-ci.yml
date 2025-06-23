@@ -1,0 +1,33 @@
+.default_rules:
+  rules:
+    - when: manual
+
+stages:
+  - build
+  - portainer
+
+variables:
+  TAG_PATH: $NEXUS_REGISTRY/$CI_PROJECT_PATH
+
+build:
+  stage: build
+  image: data61/magda-builder-docker:latest
+  services:
+    - docker:dind
+  rules:
+    - !reference [.default_rules, rules]
+  before_script:
+    - docker login -u $NEXUS_USER -p $NEXUS_PASS $NEXUS_REGISTRY
+  script:
+    - docker context create builder-context
+    - docker buildx create --name builderx --driver docker-container --use builder-context
+    - docker buildx build -t $TAG_PATH:latest -t $TAG_PATH:$CI_COMMIT_SHORT_SHA -f beszel/dockerfile_Hub --push --platform=linux/amd64 beszel
+    - docker buildx build -t ${TAG_PATH}-agent:latest -t ${TAG_PATH}-agent:$CI_COMMIT_SHORT_SHA -f beszel/dockerfile_Agent --push --platform=linux/amd64 beszel
+
+portainer_notify:
+  stage: portainer
+  image: curlimages/curl:latest
+  rules:
+    - when: manual
+  script:
+    - curl -s -o /dev/null -X POST "$PORTAINER_WEBHOOK$PORTAINER_APP"
